@@ -73,31 +73,32 @@ def extract_agent_info(soup):
     """ Extract the information of the agent"""
     agent_info = {}
 
-    name_tag = soup.select_one("a.re__contact-name")
-    if name_tag:
-        agent_info['agent_name'] = name_tag.get_text(strip=True)
-        agent_info['agent_profile_url'] = name_tag.get('href', "N/A")
+    contact_box = soup.find("div", class_="re__ldp-contact-box")
+    if contact_box:
+        agent_infor = contact_box.find("div", class_="re__agent-infor re__agent-name")
+        if agent_infor:
+            name_tag = (
+                    agent_infor.find("a", class_="re__contact-name")
+                    or agent_infor.find("a", class_="js__agent-contact-name")
+            )
+            if name_tag:
+                agent_info['agent_name'] = name_tag.get_text(strip=True)
+                agent_info['agent_profile_url'] = name_tag.get('href')
 
     avatar_tag = soup.select_one("img.re__contact-avatar")
     if avatar_tag:
-        agent_info['agent_avatar_url'] = avatar_tag.get('src', "N/A")
+        agent_info['agent_avatar_url'] = avatar_tag.get('src')
 
     phone_div = soup.select_one("div.js__phone")
     if phone_div:
         phone_span = phone_div.find('span')
         raw_phone = phone_span.get_text(strip=True) if phone_span else ""
-
-        agent_info['agent_phone_raw'] = phone_div.get('raw', "N/A")
-
-        normalized_phone = re.sub(r'[\s·.]*Hiện\s*số.*', '', raw_phone, flags=re.IGNORECASE).strip()
-        normalized_phone = normalized_phone.replace(' ', '')
-
-        agent_info['agent_phone_visible'] = normalized_phone
+        agent_info['agent_phone_visible'] = raw_phone
 
     zalo_tag = soup.select_one("a.js__zalo-chat")
     if zalo_tag:
-        agent_info['agent_zalo_url'] = zalo_tag.get('data-href', "N/A")
-        agent_info['agent_zalo_raw'] = zalo_tag.get('raw', "N/A")
+        agent_info['agent_zalo_url'] = zalo_tag.get('data-href')
+        agent_info['agent_zalo_raw'] = zalo_tag.get('raw')
 
     other_listings_tag = soup.select_one("a.re__link-se")
     if other_listings_tag:
